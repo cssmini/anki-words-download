@@ -13,54 +13,49 @@ import java.net.URL;
 import java.net.URLConnection;
 
 /**
- * Hello world!
+ * download images
  *
  */
 public class App {
-    public static void main(String[] args) {
-        Integer pageNumber = 1;
-        String userName = "272688";
-        String password = "123456";
-        String keyword = "dog";
-        String url = "https://image.sogou.com/pics?mode=1&start=48&reqType=ajax&reqFrom=result&tn=0&query=";
-        //Map<String, String> cookies = new UrspRepositoryLoginServiceImpl().loginChonQing(userName, password);
 
-        Document doc = JsoupUtils.getJsoupDocGet(url + keyword);
+    /**
+     * 音频地址
+     */
+    private final static String AUDIO_DOWNLOAD_URI = "http://media.shanbay.com/audio/us/";
+    /**
+     * 图片下载地址
+     */
+    private final static String IMAGE_DOWNLOAD_URI = "https://image.sogou.com/pics?mode=1&start=48&reqType=ajax&reqFrom=result&tn=0&query=";
+    /**
+     * 文件保存路径
+     */
+    private final static  String DIR_PATH = "D:/image";
+
+    public static void main(String[] args) {
+
+        String keyword = "dog";
+
+
+        // file path
+        String path = App.DIR_PATH +"/"+ keyword;
+
+        String audioName = keyword + ".mp3";
+        // 下载音频
+        App.downloadFileByUrl(App.AUDIO_DOWNLOAD_URI + audioName,audioName,path);
+
+        Document doc = JsoupUtils.getJsoupDocGet(App.IMAGE_DOWNLOAD_URI + keyword);
         String json = doc.body().text();
         JSONObject jsonObject = JSON.parseObject(json);
         String string = jsonObject.getString("items");
         JSONArray jsonArray = JSON.parseArray(string);
+
         for (Object o : jsonArray) {
             JSONObject temp =(JSONObject) o;
             System.out.println(temp.get("pic_url"));
-            String dir = "D:/image";
-            String word = "/dog";
+            // image name
             String name =  IdUtil.fastSimpleUUID()+".jpg";
-            App.downloadFileByUrl(temp.getString("pic_url"),name, dir + word);
+            App.downloadFileByUrl(temp.getString("pic_url"),name, path);
         }
-        System.out.println(json);
-    }
-
-    public static void download(String urlString, String filename) throws Exception {
-        // 构造URL
-        URL url = new URL(urlString);
-        // 打开连接
-        URLConnection con = url.openConnection();
-        // 输入流
-        InputStream is = con.getInputStream();
-        // 1K的数据缓冲
-        byte[] bs = new byte[1024 * 1024 * 2];
-        // 读取到的数据长度
-        int len;
-        // 输出的文件流
-        OutputStream os = new FileOutputStream(filename);
-        // 开始读取
-        while ((len = is.read(bs)) != -1) {
-            os.write(bs, 0, len);
-        }
-        // 完毕，关闭所有链接
-        os.close();
-        is.close();
     }
 
     /**
@@ -122,7 +117,6 @@ public class App {
                 if (bis != null) {// 关闭字节缓冲输入流
                     bis.close();
                 }
-
                 if (inputStream != null) {// 关闭字节输入流
                     inputStream.close();
                 }
@@ -132,7 +126,6 @@ public class App {
                 if (outputStream != null) {// 关闭字节输出流
                     outputStream.close();
                 }
-
             } catch (IOException e) {
                 e.printStackTrace();
             }

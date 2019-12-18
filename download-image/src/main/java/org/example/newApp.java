@@ -26,20 +26,24 @@ public class newApp {
 
     /**
      * 音频地址
+     * http://media.shanbay.com/audio/us/
      */
     private final static String AUDIO_DOWNLOAD_URI = "http://media.shanbay.com/audio/us/";
     /**
      * 图片下载地址
      */
-    private final static String IMAGE_DOWNLOAD_URI = "https://image.sogou.com/pics?mode=1&start=48&reqType=ajax&reqFrom=result&tn=0&query=";
+    private final static String IMAGE_DOWNLOAD_URI = "https://image.sogou.com/pics?mode=1&start=1&reqType=ajax&reqFrom=result&tn=0&query=";
+
+    private final static int DOWNLOAD_IMAGE_MAX_COUNT = 20;
     /**
      * 图片文件保存路径
      */
     private final static  String IMAGE_DIR_PATH = "D:/image";
     /**
      * 音频文件保存路径
+     * C:/Users/19102/AppData/Roaming/Anki2/用户1/collection.media/
      */
-    private final static  String AUDIO_DIR_PATH = "";
+    private final static  String AUDIO_DIR_PATH = "D:/audio/";
 
     /**
      * 有道 xml 文件路径
@@ -60,17 +64,38 @@ public class newApp {
      */
     private final static String SEPARATOR = "|";
 
+    /**
+     * 换行符
+     */
+    private final static String tagB = "<br/>";
+
     public static void main(String[] args) {
-         // 单词
-        String keyword = "dog";
-        // 文件名称
-        String fileName = newApp.FILE_PREFIX + keyword;
-
-
         //读取从有道导出的 xml 格式文件
         List<Map<String, String>> listMap = newApp.YouDoXmlFile2Map(YOU_DAO_XML_FILE);
+        List<String> errorWord = new ArrayList<>();
+        int stpe = 0;
+        for (Map<String, String> map : listMap) {
+
+            stpe++;
+            /*if (stpe < 102){
+                continue;
+            }*/
+            // 101
+            String keyword = map.get("word");
+
+            // 下载音频
+            downloadAduioFile(errorWord, keyword);
+
+            // 下载图片
+           // downloadImageFile(keyword);
+
+        }
         newApp.exportTxtPaper(listMap);
 
+        System.out.println("失败的单词：");
+        for (String s : errorWord) {
+            System.out.println(s);
+        }
         // 下载图片
         //downloadImageFile(keyword);
 
@@ -82,15 +107,15 @@ public class newApp {
     public static void  exportTxtPaper(List<Map<String, String>> listMap) {
 
         Writer out;
-        StringBuilder sb = null;
+        StringBuilder sb = new StringBuilder();
         try {
             out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(newApp.FILE_OUT_PATH,true), "utf-8"), 10240);
             for (Map<String, String> map : listMap) {
                 // 格式：单词|音标|释义|发音|例句|例句翻译|图片
-                sb = new StringBuilder();
+
                 sb.append(map.get("word")).append(SEPARATOR);
                 sb.append(map.get("phonetic")).append(SEPARATOR);
-                sb.append(map.get("trans")).append(SEPARATOR);
+                sb.append(newApp.transManage(map.get("trans"))).append(SEPARATOR);
                 sb.append(map.get("audioTAG")).append(SEPARATOR);
                 // 例句 map.get("example")
                 sb.append("  ").append(SEPARATOR);
@@ -98,18 +123,25 @@ public class newApp {
                 sb.append("  ").append(SEPARATOR);
                 sb.append(map.get("imageTAG")).append(SEPARATOR);
                 sb.append("\r\n");
-                /*
-                out.write();
-                out.write("\r\n");*/
             }
             out.write(sb.toString());
             out.flush();
             out.close();
         } catch (Exception e1) {
-            // TODO Auto-generated catch block
             e1.printStackTrace();
         }
     }
+
+    public static String transManage(String trans){
+        String[] arr = {"conj\\.","n\\.","vt\\.","vi\\.","prep\\.","pron\\.","adj\\.","art\\.","int\\.","num\\.","adv\\."};
+        for (String s : arr) {
+
+            trans = trans.replaceAll(s, newApp.tagB + s);
+            System.out.println();
+        }
+        return trans;
+    }
+
 
     /**
      *   格式：
@@ -127,7 +159,7 @@ public class newApp {
      */
     public static List<Map<String, String>> YouDoXmlFile2Map(String xmlPath) {
         List<Map<String, String>> list = new ArrayList<>(16);
-        Map<String, String> map = new HashMap<String, String>(16);
+        Map<String, String> map = null;
         org.dom4j.Document doc = null;
         try {
             SAXReader reader = new SAXReader();
@@ -138,16 +170,18 @@ public class newApp {
             // 遍历节点
             Iterator iter = rootElt.elementIterator("item");
             while (iter.hasNext()) {
+                map = new HashMap<String, String>(16);
                 Element recordEle = (Element) iter.next();
                 String word = recordEle.elementTextTrim("word");
                 String trans = recordEle.elementTextTrim("trans");
                 String phonetic = recordEle.elementTextTrim("phonetic");
                 String tags = recordEle.elementTextTrim("tags");
                 String progress = recordEle.elementTextTrim("progress");
+                String fileName = newApp.FILE_PREFIX + word;
                 // 音频标签
-                String audioTAG = "[sound:"+word+".mp3]";
+                String audioTAG = "[sound:"+fileName+".mp3]";
                 // 图片标签
-                String imageTAG = "<img src=\""+word+".jpg\">";
+                String imageTAG = "<img src=\""+fileName+".jpg\">";
                 map.put("word", word);
                 map.put("trans", trans);
                 map.put("phonetic", phonetic);
@@ -179,24 +213,44 @@ public class newApp {
         JSONObject jsonObject = JSON.parseObject(json);
         String string = jsonObject.getString("items");
         JSONArray jsonArray = JSON.parseArray(string);
-        for (Object o : jsonArray) {
-            JSONObject temp =(JSONObject) o;
-            System.out.println(temp.get("pic_url"));
-            // 图片名称
-            String name =  newApp.FILE_PREFIX + IdUtil.fastSimpleUUID()+".jpg";
-            newApp.downloadFileByUrl(temp.getString("pic_url"),name, path);
+        int step = 0;
+        try{
+            for (Object o : jsonArray) {
+                ++step;
+                JSONObject temp =(JSONObject) o;
+                System.out.println(temp.get("pic_url"));
+                // 图片名称
+                String name =  IdUtil.fastSimpleUUID()+".jpg";
+
+                DownFile test = new DownFile();
+                String imagePath = temp.getString("pic_url");
+                int threadnum = 3;
+                try {
+                    test.down(path,name,imagePath, threadnum);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                if (step >= DOWNLOAD_IMAGE_MAX_COUNT){
+                    break;
+                }
+                //newApp.downloadFileByUrl(temp.getString("pic_url"),name, path);
+            }
+        }catch (Exception e){
+            System.out.println("==========================报错 keyword："+keyword);
+            //e.printStackTrace();
         }
     }
 
-    public static void downloadAduioFile(String keyword){
+    public static void downloadAduioFile(List<String> errorList,String keyword){
         // file path
         String path = newApp.AUDIO_DIR_PATH;
         // 音频名称
-        String audioName = newApp.FILE_PREFIX + keyword + ".mp3";
+        String audioName = keyword + ".mp3";
         // 下载音频
-        newApp.downloadFileByUrl(newApp.AUDIO_DOWNLOAD_URI + audioName,audioName,path);
+        newApp.downloadFileByUrl(errorList,newApp.AUDIO_DOWNLOAD_URI + audioName,audioName,path);
     }
-   
+
     /**
      * 根据网络URL下载文件
      * @param url
@@ -206,13 +260,14 @@ public class newApp {
      * @param savePath
      *            文件保存根路径
      */
-    public static void downloadFileByUrl(String url, String fileName, String savePath) {
+    public static void downloadFileByUrl(List<String> errorList, String url, String fileName, String savePath) {
         URL urlObj = null;
         URLConnection conn = null;
         InputStream inputStream = null;
         BufferedInputStream bis = null;
         OutputStream outputStream = null;
         BufferedOutputStream bos = null;
+        fileName = newApp.FILE_PREFIX + fileName;
         try {
             // 1.建立网络连接
             urlObj = new URL(url);
@@ -247,11 +302,16 @@ public class newApp {
             System.out.println("世界上最遥远的距离就是没有网，检查设置");
             System.out.println("info:" + url + " download failure");
             e.printStackTrace();
+            errorList.add(url);
         } catch (IOException e) {
             System.out.println("您的网络连接打开失败，请稍后重试！");
             System.out.println("info:" + url + " download failure");
             e.printStackTrace();
-        } finally {// 关闭流
+            errorList.add(url);
+        }catch (Exception e){
+            e.printStackTrace();
+            errorList.add(url);
+        }finally {// 关闭流
             try {
                 if (bis != null) {// 关闭字节缓冲输入流
                     bis.close();

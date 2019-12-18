@@ -46,3 +46,11 @@ form|[fɔrm]|n. 形式，形状；形态，外形；方式；表格<br>vt. 构�
 8. 导入文件 anki
 
 9. end
+
+
+图片抓取
+```
+
+Java爬取百度、谷歌、必应图片
+https://www.mysea.digital/code/javaspider-to-baidu-google-bing/
+```

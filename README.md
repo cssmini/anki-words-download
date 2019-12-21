@@ -34,6 +34,9 @@ https://ankiweb.net/shared/info/1975702409
 有道风格基础模板 1.0
 https://zhuanlan.zhihu.com/p/24287378
 
+【Anki小工具】有道生词本转Anki 1.0
+https://zhuanlan.zhihu.com/p/24288262
+
 
 存在的问题：
 

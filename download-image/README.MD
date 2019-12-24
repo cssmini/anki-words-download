@@ -4,8 +4,9 @@
 // 男声
 https://ssl.gstatic.com/dictionary/static/sounds/oxford/{0}--_gb_1.mp3
 
-// 女声
-http://media.shanbay.com/audio/us/{0}.mp3
+// 女声 扇贝单词发音：
+1. 美式：http://media.shanbay.com/audio/us/%s.mp3
+2. 英式：http://media.shanbay.com/audio/uk/%s.mp3
 
 ```
 

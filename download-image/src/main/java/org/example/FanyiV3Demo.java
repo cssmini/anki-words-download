@@ -1,5 +1,6 @@
-package com.dlibs.crd.admin.task.job;
+package org.example;
 
+import com.alibaba.fastjson.JSONObject;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
@@ -10,10 +11,11 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -21,8 +23,6 @@ import java.util.*;
 
 
 public class FanyiV3Demo {
-
-    private static Logger logger = LoggerFactory.getLogger(FanyiV3Demo.class);
 
     private static final String YOUDAO_URL = "https://openapi.youdao.com/api";
 
@@ -33,7 +33,7 @@ public class FanyiV3Demo {
     public static void main(String[] args) throws IOException {
 
         Map<String,String> params = new HashMap<String,String>();
-        String q = "dog";
+        String q = "weekend";
         String salt = String.valueOf(System.currentTimeMillis());
         params.put("from", "en");
         params.put("to", "zh-CHS");
@@ -69,7 +69,7 @@ public class FanyiV3Demo {
         CloseableHttpResponse httpResponse = httpClient.execute(httpPost);
         try{
             Header[] contentType = httpResponse.getHeaders("Content-Type");
-            logger.info("Content-Type:" + contentType[0].getValue());
+            System.out.println("Content-Type:" + contentType[0].getValue());
             if("audio/mp3".equals(contentType[0].getValue())){
                 //如果响应是wav
                 HttpEntity httpEntity = httpResponse.getEntity();
@@ -86,7 +86,9 @@ public class FanyiV3Demo {
                 HttpEntity httpEntity = httpResponse.getEntity();
                 String json = EntityUtils.toString(httpEntity,"UTF-8");
                 EntityUtils.consume(httpEntity);
-                logger.info(json);
+
+                JSONObject jsonObject = JSONObject.parseObject(json);
+
                 System.out.println(json);
             }
         }finally {
@@ -95,7 +97,7 @@ public class FanyiV3Demo {
                     httpResponse.close();
                 }
             }catch(IOException e){
-                logger.info("## release resouce error ##" + e);
+                System.out.println("## release resouce error ##" + e);
             }
         }
     }
@@ -139,7 +141,7 @@ public class FanyiV3Demo {
             fos.write(result);
 
         }catch (Exception e){
-            logger.info(e.toString());
+            System.out.println(e.toString());
         }finally {
             if(fos != null){
                 try {

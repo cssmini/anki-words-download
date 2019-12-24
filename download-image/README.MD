@@ -19,7 +19,18 @@ https://ssl.gstatic.com/dictionary/static/sounds/oxford/{0}--_gb_1.mp3
 ```javascript
 form|[fɔrm]|n. 形式，形状；形态，外形；方式；表格<br>vt. 构成，组成；排列，组织；产生，塑造<br>vi. 形成，构成；排列<br>n. (Form)人名；(英)福姆；(法、德)福尔姆|[sound:dog.mp3]|i have a dog|我有一只狗|<img src="3dd762165aca4556a12d4e429920bde1.jpg">
 
+
+    单词|query|
+    音标|basic.us-phonetic|
+    释义|basic.explains
+    发音|
+    例句|
+    例句翻译|
+    图片
+    
+    
 ```
+
 
 #### 步骤：
 

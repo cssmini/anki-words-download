@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>index</title>
+</head>
+<style>
+    .content{
+        margin: 0 auto;
+        text-align: center;
+        width: 500px;
+    }
+    .content input{
+        width: 100px;
+    }
+</style>
+<body>
+
+<div class="content">
+    <h3>anki 单词助手</h3>
+    <textarea id="text" cols="30" rows="10"></textarea>
+    <div>
+        <input id="btn" type="button" value="提交" onclick="submit()"/>
+    </div>
+</div>
+<script type="text/javascript" src="/js/jquery-2.1.4.min.js"></script>
+
+<script type="text/javascript">
+    function submit(){
+        var text = $("#text").val().split("\n").join("-");
+        console.log(text);
+        if (text == ''){
+            alert("内容不能为空");
+            return;
+        }
+
+        $.ajax({
+            type: "POST",
+            url: "/query",
+            data: {text:text},
+            dataType: "json",
+            success: function (res) {
+
+            }
+        });
+    }
+</script>
+</body>
+</html>

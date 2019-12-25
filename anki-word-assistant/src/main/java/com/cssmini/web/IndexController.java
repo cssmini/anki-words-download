@@ -1,17 +1,4 @@
-package org.example;
-
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.util.EntityUtils;
+package com.cssmini.web;
 
 import java.io.*;
 import java.net.MalformedURLException;
@@ -23,51 +10,82 @@ import java.security.NoSuchAlgorithmException;
 import java.text.MessageFormat;
 import java.util.*;
 
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
 
-public class FanyiV3Demo {
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 
-    private static final String YOUDAO_URL = "https://openapi.youdao.com/api";
+/**
+ * 首页 控制器
+ *
+ * @author: hxl
+ * @create: 2019-11-17 15:21
+ **/
+@Controller
+public class IndexController {
 
-    private static final String APP_KEY = "70c363ebfaccfe32";
+    @Value("${YOUDAO_URL}")
+    private  String YOUDAO_URL;
 
-    private static final String APP_SECRET = "b9JyuLR8WNuU6Jc0XnAHx0B7i83Hdduc";
+    @Value("${APP_KEY}")
+    private  String APP_KEY;
 
-    private final static String SEPARATOR = "\t";
+    @Value("${APP_SECRET}")
+    private  String APP_SECRET;
 
-    private final static String TAG_BR = "<br/>";
+    @Value("${AUDIO_DIR_PATH}")
+    private   String AUDIO_DIR_PATH;
 
-    /**
-     * C:/Users/19102/AppData/Roaming/Anki2/用户1/collection.media/
-     */
-    private final static  String AUDIO_DIR_PATH = "audio";
+    @Value("${FILE_OUT_PATH}")
+    private  String FILE_OUT_PATH;
 
-    private final static String FILE_OUT_PATH = "output.txt";
+    @Value("${READER_FILE}")
+    private  String READER_FILE;
 
-    private final static String READER_FILE = "reader.txt";
+    @Value("${AUDIO_DOWNLOAD_URI}")
+    private  String AUDIO_DOWNLOAD_URI;
 
-    private final static String FILE_PREFIX = "";
+    @Value("${outputAudio}")
+    private  Boolean outputAudio;
 
-    private final static Boolean outputAudio = true;
+    @Value("${outputImage}")
+    private  Boolean outputImage;
 
-    private final static Boolean outputImage = false;
+    private  String FILE_PREFIX = "";
 
-    private static List<String> errorList = new ArrayList<>();
+    private  String SEPARATOR = "\t";
 
-    /**
-     * 音频地址
-     * http://media.shanbay.com/audio/us/{0}.mp3
-     * https://ssl.gstatic.com/dictionary/static/sounds/oxford/{0}--_gb_1.mp3
-     */
-    private final static String AUDIO_DOWNLOAD_URI = "http://media.shanbay.com/audio/us/{0}.mp3";
+    private  String TAG_BR = "<br/>";
 
-    public static void main(String[] args) throws IOException {
+    private  List<String> errorList = new ArrayList<>();
+
+    @RequestMapping("/index")
+    public String index(Locale locale, Model model) {
+
+        return "index";
+    }
+
+    @RequestMapping(value = "/query", method = RequestMethod.POST)
+    @ResponseBody
+    public Object query(String text)throws IOException{
         List<Map<String, String>> listMap = new ArrayList<>();
-        BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(READER_FILE), "UTF-8"));
-        String line="";
-        String[] arrs=null;
-        while ((line=br.readLine())!=null) {
-            arrs = line.split(" ");
-            String word = arrs[0];
+        String[] arr = text.split("-");
+        for (String word : arr) {
             Map<String, String> map = requestForHttp(YOUDAO_URL, initYouDaoParam(word));
             if (map.size() > 0){
                 listMap.add(map);
@@ -76,19 +94,17 @@ public class FanyiV3Demo {
                 }
             }
         }
-        br.close();
         exportTxtPaper(listMap);
-
         System.out.println("音频下载失败的单词：");
-        for (String word : errorList) {
-            System.out.println(word);
+        for (String a : errorList) {
+            System.out.println(a);
         }
         System.out.println("共 "+errorList.size()+ " 个单词下载失败");
         System.out.println("文件导出地址：" + FILE_OUT_PATH);
+        return "ok";
     }
 
-
-    public static void  exportTxtPaper(List<Map<String, String>> listMap) {
+    public  void  exportTxtPaper(List<Map<String, String>> listMap) {
         Writer out;
         StringBuilder sb = new StringBuilder();
         try {
@@ -122,7 +138,7 @@ public class FanyiV3Demo {
         }
     }
 
-    public static void downloadAduioFile(String keyword){
+    public  void downloadAduioFile(String keyword){
         String path = AUDIO_DIR_PATH;
         String audioName = keyword + ".mp3";
         downloadFileByUrl(MessageFormat.format(AUDIO_DOWNLOAD_URI,keyword),audioName,path);
@@ -136,7 +152,7 @@ public class FanyiV3Demo {
      * @param savePath
      *            文件保存根路径
      */
-    public static void downloadFileByUrl(String url, String fileName, String savePath) {
+    public  void downloadFileByUrl(String url, String fileName, String savePath) {
         URL urlObj = null;
         URLConnection conn = null;
         InputStream inputStream = null;
@@ -185,7 +201,7 @@ public class FanyiV3Demo {
             e.printStackTrace();*/
             errorList.add(url);
         }catch (Exception e){
-           /* e.printStackTrace();*/
+            /* e.printStackTrace();*/
             errorList.add(url);
         }finally {// 关闭流
             try {
@@ -207,7 +223,7 @@ public class FanyiV3Demo {
         }
     }
 
-    public static Map<String, String> initYouDaoParam(String word){
+    public  Map<String, String> initYouDaoParam(String word){
         Map<String,String> params = new HashMap<String,String>();
         String q = word;
         String salt = String.valueOf(System.currentTimeMillis());
@@ -224,7 +240,7 @@ public class FanyiV3Demo {
         params.put("sign", sign);
         return params;
     }
-    public static Map<String, String> requestForHttp(String url, Map<String, String> params) throws IOException {
+    public  Map<String, String> requestForHttp(String url, Map<String, String> params) throws IOException {
         String word = params.get("q");
         Map<String, String> map = new HashMap<>(16);
         /** 创建HttpClient */
@@ -298,7 +314,7 @@ public class FanyiV3Demo {
     /**
      * 生成加密字段
      */
-    public static String getDigest(String string) {
+    public  String getDigest(String string) {
         if (string == null) {
             return null;
         }
@@ -326,7 +342,7 @@ public class FanyiV3Demo {
      * @param result 音频字节流
      * @param file 存储路径
      */
-    private static void byte2File(byte[] result, String file) {
+    private  void byte2File(byte[] result, String file) {
         File audioFile = new File(file);
         FileOutputStream fos = null;
         try{
@@ -347,7 +363,7 @@ public class FanyiV3Demo {
 
     }
 
-    public static String truncate(String q) {
+    public  String truncate(String q) {
         if (q == null) {
             return null;
         }

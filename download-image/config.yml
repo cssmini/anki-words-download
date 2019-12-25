@@ -1,0 +1,16 @@
+## 有道api 地址
+YOUDAO_URL=https://openapi.youdao.com/api
+## app key
+APP_KEY=70c363ebfaccfe32
+## app 密钥
+APP_SECRET=b9JyuLR8WNuU6Jc0XnAHx0B7i83Hdduc
+## 音频保存路径
+AUDIO_DIR_PATH=audio
+## 导出文件名称
+FILE_OUT_PATH=output.txt
+## 单词文件名称（导入）
+READER_FILE=reader.txt
+## 音频下载地址
+## 扇贝：http://media.shanbay.com/audio/us/{0}.mp3
+## https://ssl.gstatic.com/dictionary/static/sounds/oxford/{0}--_gb_1.mp3
+AUDIO_DOWNLOAD_URI=http://media.shanbay.com/audio/us/{0}.mp3
